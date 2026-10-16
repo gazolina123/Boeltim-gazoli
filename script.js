@@ -49,13 +49,18 @@ function normalizarNota(valor) {
   return numero;
 }
 
-// Função para formatar exibição das notas no HTML
+// Função para formatar exibição das notas no HTML (sempre padronizado com vírgula)
 function formatarExibicaoNota(nota) {
-  if (nota === null || nota === undefined) return "—";
-  if (typeof nota === "number") {
-    return nota.toFixed(1).replace(".", ",");
-  }
-  return String(nota).replace(".", ",");
+  let notaNormal = normalizarNota(nota);
+  if (notaNormal === null) return "—";
+  return notaNormal.toFixed(1).replace(".", ",");
+}
+
+// Formatador exclusivo para preencher o campo de input na edição (ex: 77 vira 7.7)
+function formatarNotaParaInput(nota) {
+  let notaNormal = normalizarNota(nota);
+  if (notaNormal === null) return "";
+  return notaNormal.toString().replace(".", ",");
 }
 
 // Validar valor digitado no modo edição (Nota: 0 a 10, ponto/vírgula ou vazio)
@@ -278,9 +283,9 @@ function renderizarBoletim() {
     if (modoEdicao) {
       const tr = document.createElement("tr");
 
-      const valTri1 = item.tri1 !== null && item.tri1 !== undefined ? item.tri1 : "";
-      const valTri2 = item.tri2 !== null && item.tri2 !== undefined ? item.tri2 : "";
-      const valTri3 = item.tri3 !== null && item.tri3 !== undefined ? item.tri3 : "";
+      const valTri1 = formatarNotaParaInput(item.tri1);
+      const valTri2 = formatarNotaParaInput(item.tri2);
+      const valTri3 = formatarNotaParaInput(item.tri3);
 
       const f1 = faltasArr[0] !== undefined ? faltasArr[0] : 0;
       const f2 = faltasArr[1] !== undefined ? faltasArr[1] : 0;
