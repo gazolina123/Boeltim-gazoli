@@ -29,6 +29,11 @@ let dadosDisciplinas = [
 
 let modoEdicao = false;
 
+// Instâncias globais dos gráficos Chart.js
+let graficoMedias = null;
+let graficoEvolucao = null;
+let graficoFaltas = null;
+
 // Função para normalizar qualquer formato de nota LEGADO para a escala de 0 a 10
 function normalizarNota(valor) {
   if (valor === null || valor === undefined || valor === "") {
@@ -388,16 +393,220 @@ function renderizarBoletim() {
   document.getElementById("total-faltas").textContent = totalFaltasGeral;
   document.getElementById("bom-desempenho").textContent = contadorBomDesempenho;
   document.getElementById("atencao").textContent = contadorAtencao;
+
+  // Atualização dos gráficos após término normal de renderização da tela
+  atualizarGraficos();
 }
 
-// Adicionar evento para tecla Enter no input do PIN
-document.addEventListener("DOMContentLoaded", () => {
-  const inputPin = document.getElementById("input-pin");
-  if (inputPin) {
-    inputPin.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        fazerLogin();
-      }
-    });
+// =========================================
+// CAMADA EXCLUSIVA DOS GRÁFICOS (SOMENTE LEITURA)
+// =========================================
+
+function atualizarGraficoMedias() {
+  const canvas = document.getElementById("graficoMediasDisciplinas");
+  if (!canvas) return;
+
+  if (graficoMedias) {
+    graficoMedias.destroy();
   }
-});
+
+  const rotulos = [];
+  const valoresMedias = [];
+
+  dadosDisciplinas.forEach(item => {
+    rotulos.push(item.disciplina);
+    const n1 = normalizarNota(item.tri1);
+    const n2 = normalizarNota(item.tri2);
+    const n3 = normalizarNota(item.tri3);
+
+    const notasValidas = [n1, n2, n3].filter(n => n !== null);
+    if (notasValidas.length > 0) {
+      const soma = notasValidas.reduce((a, b) => a + b, 0);
+      const media = soma / notasValidas.length;
+      valoresMedias.push(Number(media.toFixed(1)));
+    } else {
+      valoresMedias.push(null);
+    }
+  });
+
+  graficoMedias = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: rotulos,
+      datasets: [{
+        label: "Média",
+        data: valoresMedias,
+        backgroundColor: "rgba(0, 86, 179, 0.75)",
+        borderColor: "#0056b3",
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          min: 0,
+          max: 10,
+          ticks: { stepSize: 1 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const valor = context.raw;
+              if (valor === null || valor === undefined) return " Sem nota";
+              return ` ${String(valor.toFixed(1)).replace(".", ",")}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficoEvolucao() {
+  const canvas = document.getElementById("graficoEvolucaoTrimestres");
+  if (!canvas) return;
+
+  if (graficoEvolucao) {
+    graficoEvolucao.destroy();
+  }
+
+  const somas = [0, 0, 0];
+  const contagens = [0, 0, 0];
+
+  dadosDisciplinas.forEach(item => {
+    const n1 = normalizarNota(item.tri1);
+    const n2 = normalizarNota(item.tri2);
+    const n3 = normalizarNota(item.tri3);
+
+    if (n1 !== null) { somas[0] += n1; contagens[0]++; }
+    if (n2 !== null) { somas[1] += n2; contagens[1]++; }
+    if (n3 !== null) { somas[2] += n3; contagens[2]++; }
+  });
+
+  const mediasTrimestrais = [
+    contagens[0] > 0 ? Number((somas[0] / contagens[0]).toFixed(1)) : null,
+    contagens[1] > 0 ? Number((somas[1] / contagens[1]).toFixed(1)) : null,
+    contagens[2] > 0 ? Number((somas[2] / contagens[2]).toFixed(1)) : null
+  ];
+
+  graficoEvolucao = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: ["1º Tri", "2º Tri", "3º Tri"],
+      datasets: [{
+        label: "Média Geral",
+        data: mediasTrimestrais,
+        borderColor: "#0056b3",
+        backgroundColor: "rgba(0, 86, 179, 0.15)",
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: "#0056b3",
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: 10,
+          ticks: { stepSize: 1 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const valor = context.raw;
+              if (valor === null || valor === undefined) return " Sem dados";
+              return ` Média: ${String(valor.toFixed(1)).replace(".", ",")}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficoFaltas() {
+  const canvas = document.getElementById("graficoFaltasTrimestres");
+  const estadoFaltasDiv = document.getElementById("estadoFaltas");
+  const cardFaltas = document.getElementById("card-grafico-faltas");
+  if (!canvas) return;
+
+  if (graficoFaltas) {
+    graficoFaltas.destroy();
+  }
+
+  let faltasTri1 = 0;
+  let faltasTri2 = 0;
+  let faltasTri3 = 0;
+
+  dadosDisciplinas.forEach(item => {
+    let faltasArr = Array.isArray(item.faltas) ? item.faltas : [0, 0, 0];
+    faltasTri1 += Number(faltasArr[0]) || 0;
+    faltasTri2 += Number(faltasArr[1]) || 0;
+    faltasTri3 += Number(faltasArr[2]) || 0;
+  });
+
+  const totalFaltas = faltasTri1 + faltasTri2 + faltasTri3;
+
+  // Avaliação interna de risco (referência 350)
+  if (totalFaltas >= 350) {
+    if (estadoFaltasDiv) estadoFaltasDiv.textContent = "Perigo";
+    if (cardFaltas) cardFaltas.classList.add("perigo");
+  } else {
+    if (estadoFaltasDiv) estadoFaltasDiv.textContent = "";
+    if (cardFaltas) cardFaltas.classList.remove("perigo");
+  }
+
+  graficoFaltas = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: ["1º Tri", "2º Tri", "3º Tri"],
+      datasets: [{
+        label: "Faltas",
+        data: [faltasTri1, faltasTri2, faltasTri3],
+        backgroundColor: ["#0056b3", "#0056b3", "#0056b3"],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return ` ${context.label}: ${context.raw} faltas`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficos() {
+  atualizarGraficoMedias();
+  atualizarGraficoEvolucao();
+  atualizarGraficoFaltas();
+}
+
+// Adicionar evento

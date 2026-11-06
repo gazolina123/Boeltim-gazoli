@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -15,8 +16,8 @@
         <section id="area-login" class="area-login">
             <h2>Acesso ao Boletim</h2>
             <div class="info-aluno-login">
-                <span>Série: <strong>8º Ano</strong></span> | 
-                <span>Turma: <strong>8A</strong></span> | 
+                <span>Série: <strong>8º Ano</strong></span> |
+                <span>Turma: <strong>8A</strong></span> |
                 <span>Chamada: <strong>31</strong></span>
             </div>
             <div class="form-login">
@@ -26,9 +27,10 @@
             <p id="mensagem-login" class="mensagem-status"></p>
         </section>
 
-        <!-- CONTEÚDO DO BOLETIM (OCULTO ANTES DO LOGIN) -->
+        <!-- CONTEÚDO DO BOLETIM -->
         <div id="conteudo-boletim" style="display: none;">
-            <!-- Cabeçalho do Boletim -->
+
+            <!-- Cabeçalho -->
             <header class="header">
                 <h1>Boletim Digital</h1>
                 <p class="subtitulo">Estudante: <strong>Estudante Exemplo</strong> | Turma: <strong>8A</strong> | Nº <strong>31</strong></p>
@@ -66,7 +68,37 @@
                 </div>
             </section>
 
-            <!-- painel de Ações e Mensagens da Edição -->
+            <!-- ÁREA DOS GRÁFICOS -->
+            <section class="area-graficos">
+
+                <!-- Gráfico 1 -->
+                <article class="grafico-card">
+                    <h2>Média por disciplina</h2>
+                    <div class="grafico-container grafico-medias-container">
+                        <canvas id="graficoMediasDisciplinas" aria-label="Gráfico de média por disciplina" role="img"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfico 2 -->
+                <article class="grafico-card">
+                    <h2>Evolução da média geral</h2>
+                    <div class="grafico-container">
+                        <canvas id="graficoEvolucaoTrimestres" aria-label="Gráfico de evolução da média geral por trimestre" role="img"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfico 3 -->
+                <article class="grafico-card" id="card-grafico-faltas">
+                    <h2>Faltas por trimestre</h2>
+                    <div id="estadoFaltas"></div>
+                    <div class="grafico-container">
+                        <canvas id="graficoFaltasTrimestres" aria-label="Gráfico de faltas por trimestre" role="img"></canvas>
+                    </div>
+                </article>
+
+            </section>
+
+            <!-- Painel de Edição -->
             <div id="painel-edicao" class="painel-edicao" style="display: none;">
                 <button id="btn-salvar" onclick="salvarAlteracoes()" class="btn-salvar">Salvar alterações</button>
                 <p id="mensagem-edicao" class="mensagem-status"></p>
@@ -89,15 +121,20 @@
                             </tr>
                         </thead>
                         <tbody id="tabela-corpo">
-                            <!-- As disciplinas serão geradas automaticamente pelo JavaScript -->
+                            <!-- Disciplinas geradas pelo JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </section>
+
         </div>
     </div>
 
-    <script src="script.js"></script>
-</body>
+    <!-- Biblioteca Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- JavaScript do projeto -->
+    <script src="script.js"></script>
+
+</body>
 </html>
